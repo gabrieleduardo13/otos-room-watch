@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consultorios: {
+        Row: {
+          andar: string
+          conexao_obs: string | null
+          conexao_status: string
+          cpu_obs: string | null
+          cpu_status: string
+          created_at: string
+          especialidade: string | null
+          estabilizador_obs: string | null
+          estabilizador_status: string
+          id: string
+          medico1_crm: string | null
+          medico1_nome: string | null
+          medico2_crm: string | null
+          medico2_nome: string | null
+          monitor_obs: string | null
+          monitor_status: string
+          numero: string
+          observacoes: string | null
+          perifericos_obs: string | null
+          perifericos_status: string
+          sistemas_obs: string | null
+          sistemas_status: string
+          updated_at: string
+        }
+        Insert: {
+          andar: string
+          conexao_obs?: string | null
+          conexao_status?: string
+          cpu_obs?: string | null
+          cpu_status?: string
+          created_at?: string
+          especialidade?: string | null
+          estabilizador_obs?: string | null
+          estabilizador_status?: string
+          id?: string
+          medico1_crm?: string | null
+          medico1_nome?: string | null
+          medico2_crm?: string | null
+          medico2_nome?: string | null
+          monitor_obs?: string | null
+          monitor_status?: string
+          numero: string
+          observacoes?: string | null
+          perifericos_obs?: string | null
+          perifericos_status?: string
+          sistemas_obs?: string | null
+          sistemas_status?: string
+          updated_at?: string
+        }
+        Update: {
+          andar?: string
+          conexao_obs?: string | null
+          conexao_status?: string
+          cpu_obs?: string | null
+          cpu_status?: string
+          created_at?: string
+          especialidade?: string | null
+          estabilizador_obs?: string | null
+          estabilizador_status?: string
+          id?: string
+          medico1_crm?: string | null
+          medico1_nome?: string | null
+          medico2_crm?: string | null
+          medico2_nome?: string | null
+          monitor_obs?: string | null
+          monitor_status?: string
+          numero?: string
+          observacoes?: string | null
+          perifericos_obs?: string | null
+          perifericos_status?: string
+          sistemas_obs?: string | null
+          sistemas_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      historico: {
+        Row: {
+          consultorio_id: string
+          created_at: string
+          data: string
+          descricao: string
+          equipamento: string
+          id: string
+          responsavel: string
+          tipo: string
+        }
+        Insert: {
+          consultorio_id: string
+          created_at?: string
+          data?: string
+          descricao: string
+          equipamento: string
+          id?: string
+          responsavel: string
+          tipo: string
+        }
+        Update: {
+          consultorio_id?: string
+          created_at?: string
+          data?: string
+          descricao?: string
+          equipamento?: string
+          id?: string
+          responsavel?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_consultorio_id_fkey"
+            columns: ["consultorio_id"]
+            isOneToOne: false
+            referencedRelation: "consultorios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
