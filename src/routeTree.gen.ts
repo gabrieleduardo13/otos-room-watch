@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AndarAndarRouteImport } from './routes/andar.$andar'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AndarAndarRoute = AndarAndarRouteImport.update({
+  id: '/andar/$andar',
+  path: '/andar/$andar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/andar/$andar': typeof AndarAndarRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/andar/$andar': typeof AndarAndarRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/andar/$andar': typeof AndarAndarRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/andar/$andar'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/andar/$andar'
+  id: '__root__' | '/' | '/andar/$andar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AndarAndarRoute: typeof AndarAndarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/andar/$andar': {
+      id: '/andar/$andar'
+      path: '/andar/$andar'
+      fullPath: '/andar/$andar'
+      preLoaderRoute: typeof AndarAndarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AndarAndarRoute: AndarAndarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
