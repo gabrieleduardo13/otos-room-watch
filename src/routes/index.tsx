@@ -7,6 +7,7 @@ import {
   ANDARES,
   consultoriosQuery,
   formatDate,
+  historicoRecenteQuery,
   situacaoAtual,
   type Status,
 } from "@/lib/consultorios";
