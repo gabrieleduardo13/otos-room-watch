@@ -117,9 +117,9 @@ function ConsultorioDetalhe() {
 
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
         <div>
-          <p className={label}>Médicos (até 2)</p>
+          <p className={label}>Médicos (até 3)</p>
           <div className="mt-2 space-y-2">
-            {([1, 2] as const).map((n) => (
+            {([1, 2, 3] as const).map((n) => (
               <div key={n} className="flex gap-2">
                 <input
                   className={field}

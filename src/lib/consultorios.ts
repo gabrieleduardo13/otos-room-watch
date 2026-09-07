@@ -42,6 +42,8 @@ export type Consultorio = {
   medico1_crm: string | null;
   medico2_nome: string | null;
   medico2_crm: string | null;
+  medico3_nome: string | null;
+  medico3_crm: string | null;
   cpu_status: Status;
   cpu_obs: string | null;
   monitor_status: Status;

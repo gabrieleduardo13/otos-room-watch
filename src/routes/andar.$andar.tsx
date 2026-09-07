@@ -93,7 +93,7 @@ function AndarPage() {
               <span className="leading-tight">
                 <span className="block text-sm font-medium">Consultório {c.numero}</span>
                 <span className="block text-xs text-muted">
-                  {[c.medico1_nome, c.medico2_nome].filter(Boolean).join(" · ") || "Sem médicos cadastrados"}
+                  {[c.medico1_nome, c.medico2_nome, c.medico3_nome].filter(Boolean).join(" · ") || "Sem médicos cadastrados"}
                 </span>
               </span>
             </span>
