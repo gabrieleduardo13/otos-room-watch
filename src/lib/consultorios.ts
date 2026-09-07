@@ -7,7 +7,7 @@ export type Status = (typeof STATUS_LIST)[number];
 export const ANDARES = [
   { slug: "terreo", label: "Térreo" },
   { slug: "primeiro", label: "1º Andar" },
-  { slug: "segundo", label: "2º Andar" },
+  
 ] as const;
 
 export type AndarSlug = (typeof ANDARES)[number]["slug"];
@@ -91,10 +91,16 @@ export const consultoriosQuery = queryOptions({
     const { data, error } = await supabase
       .from("consultorios")
       .select("*")
-      .order("andar", { ascending: true })
-      .order("numero", { ascending: true });
+      .order("andar", { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown as Consultorio[];
+    const rows = (data ?? []) as unknown as Consultorio[];
+    return rows.sort((a, b) =>
+      a.andar === b.andar
+        ? Number(a.numero) - Number(b.numero)
+        : a.andar < b.andar
+          ? -1
+          : 1,
+    );
   },
 });
 
