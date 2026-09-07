@@ -83,7 +83,7 @@ function ConsultorioDetalhe() {
   if (!consultorio || !form) {
     return (
       <AppShell>
-        <p className="text-sm text-muted">Consultório não encontrado.</q p>
+        <p className="text-sm text-muted">Consultório não encontrado.</p>
       </AppShell>
     );
   }
