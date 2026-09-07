@@ -94,12 +94,15 @@ export const consultoriosQuery = queryOptions({
       .order("andar", { ascending: true });
     if (error) throw new Error(error.message);
     const rows = (data ?? []) as unknown as Consultorio[];
+    const ordem = (n: string) => {
+      const m = n.match(/\d+/);
+      return m ? Number(m[0]) : 999;
+    };
+    const peso = (a: string) => ANDARES.findIndex((x) => x.slug === a);
     return rows.sort((a, b) =>
       a.andar === b.andar
-        ? Number(a.numero) - Number(b.numero)
-        : a.andar < b.andar
-          ? -1
-          : 1,
+        ? ordem(a.numero) - ordem(b.numero) || a.numero.localeCompare(b.numero, "pt-BR")
+        : peso(a.andar) - peso(b.andar),
     );
   },
 });
