@@ -30,6 +30,8 @@ export type Database = {
           medico1_nome: string | null
           medico2_crm: string | null
           medico2_nome: string | null
+          medico3_crm: string | null
+          medico3_nome: string | null
           monitor_obs: string | null
           monitor_status: string
           numero: string
@@ -55,6 +57,8 @@ export type Database = {
           medico1_nome?: string | null
           medico2_crm?: string | null
           medico2_nome?: string | null
+          medico3_crm?: string | null
+          medico3_nome?: string | null
           monitor_obs?: string | null
           monitor_status?: string
           numero: string
@@ -80,6 +84,8 @@ export type Database = {
           medico1_nome?: string | null
           medico2_crm?: string | null
           medico2_nome?: string | null
+          medico3_crm?: string | null
+          medico3_nome?: string | null
           monitor_obs?: string | null
           monitor_status?: string
           numero?: string
