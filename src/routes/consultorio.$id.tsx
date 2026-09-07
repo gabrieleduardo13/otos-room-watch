@@ -310,6 +310,8 @@ function NovoRegistro({ consultorioId }: { consultorioId: string }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["historico", consultorioId] });
+      queryClient.invalidateQueries({ queryKey: ["historico-recente"] });
+
       setDescricao("");
       setData(hoje);
     },
