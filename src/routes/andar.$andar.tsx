@@ -29,10 +29,8 @@ export const Route = createFileRoute("/andar/$andar")({
       ],
     };
   },
-  beforeLoad: ({ params }) => {
+  loader: ({ context, params }) => {
     if (!ANDARES.some((a) => a.slug === params.andar)) throw notFound();
-  },
-  loader: ({ context }) => {
     context.queryClient.ensureQueryData(consultoriosQuery);
   },
   component: AndarPage,
