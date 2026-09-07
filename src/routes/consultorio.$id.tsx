@@ -207,9 +207,12 @@ function ConsultorioDetalhe() {
               <div key={h.id} className="px-3 py-3 hover:bg-glow/5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-xs font-medium text-ink">{formatDate(h.data)}</span>
-                  <span className="rounded bg-glow/15 px-2 py-0.5 font-mono text-[10px] font-medium text-ink/70">
-                    {h.equipamento}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded bg-glow/15 px-2 py-0.5 font-mono text-[10px] font-medium text-ink/70">
+                      {h.equipamento}
+                    </span>
+                    <ApagarRegistro registroId={h.id} consultorioId={id} />
+                  </div>
                 </div>
                 <p className="mt-1 text-sm text-pretty">
                   {h.tipo} — {h.descricao}
@@ -221,6 +224,7 @@ function ConsultorioDetalhe() {
 
           <NovoRegistro consultorioId={id} />
         </div>
+
       </div>
     </AppShell>
   );
