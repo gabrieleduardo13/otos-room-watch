@@ -29,8 +29,9 @@ export const Route = createFileRoute("/andar/$andar")({
       ],
     };
   },
-  beforeLoad: ({ params }) => {
+  loader: ({ context, params }) => {
     if (!ANDARES.some((a) => a.slug === params.andar)) throw notFound();
+    context.queryClient.ensureQueryData(consultoriosQuery);
   },
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(consultoriosQuery);

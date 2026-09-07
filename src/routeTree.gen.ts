@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AndarAndarRouteImport } from './routes/andar.$andar'
+import { Route as ConsultorioIdRouteImport } from './routes/consultorio.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const AndarAndarRoute = AndarAndarRouteImport.update({
   path: '/andar/$andar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsultorioIdRoute = ConsultorioIdRouteImport.update({
+  id: '/consultorio/$id',
+  path: '/consultorio/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/andar/$andar': typeof AndarAndarRoute
+  '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/andar/$andar': typeof AndarAndarRoute
+  '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/andar/$andar': typeof AndarAndarRoute
+  '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/andar/$andar'
+  fullPaths: '/' | '/andar/$andar' | '/consultorio/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/andar/$andar'
-  id: '__root__' | '/' | '/andar/$andar'
+  to: '/' | '/andar/$andar' | '/consultorio/$id'
+  id: '__root__' | '/' | '/andar/$andar' | '/consultorio/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AndarAndarRoute: typeof AndarAndarRoute
+  ConsultorioIdRoute: typeof ConsultorioIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AndarAndarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/consultorio/$id': {
+      id: '/consultorio/$id'
+      path: '/consultorio/$id'
+      fullPath: '/consultorio/$id'
+      preLoaderRoute: typeof ConsultorioIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AndarAndarRoute: AndarAndarRoute,
+  ConsultorioIdRoute: ConsultorioIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
