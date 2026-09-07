@@ -200,6 +200,43 @@ function VisaoGeral() {
           );
         })}
       </div>
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+            Últimas alterações
+          </p>
+          <span className="font-mono text-[10px] text-muted">{recentes.length} registros</span>
+        </div>
+        <div className="mt-2 divide-y divide-line overflow-hidden rounded-lg bg-panel ring-1 ring-black/5">
+          {recentes.length === 0 && (
+            <p className="px-3 py-3 text-sm text-muted">Nenhuma alteração registrada ainda.</p>
+          )}
+          {recentes.map((h) => (
+            <Link
+              key={h.id}
+              to="/consultorio/$id"
+              params={{ id: h.consultorio_id }}
+              className="block px-3 py-3 hover:bg-glow/5"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs font-medium text-ink">{formatDate(h.data)}</span>
+                <span className="rounded bg-brand/10 px-1.5 py-0.5 font-mono text-[10px] font-medium text-brand">
+                  Consultório {h.consultorios?.numero ?? "—"}
+                </span>
+                <span className="rounded bg-glow/15 px-1.5 py-0.5 font-mono text-[10px] text-ink/70">
+                  {h.equipamento}
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-pretty">
+                {h.tipo} — {h.descricao}
+              </p>
+              <p className="mt-1 font-mono text-[10px] text-muted">Responsável: {h.responsavel}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
     </AppShell>
   );
 }
+
