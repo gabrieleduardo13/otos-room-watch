@@ -7,7 +7,7 @@ export type Status = (typeof STATUS_LIST)[number];
 export const ANDARES = [
   { slug: "terreo", label: "Térreo" },
   { slug: "primeiro", label: "1º Andar" },
-  { slug: "segundo", label: "2º Andar" },
+  
 ] as const;
 
 export type AndarSlug = (typeof ANDARES)[number]["slug"];
