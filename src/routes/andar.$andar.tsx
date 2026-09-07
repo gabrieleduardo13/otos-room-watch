@@ -33,9 +33,6 @@ export const Route = createFileRoute("/andar/$andar")({
     if (!ANDARES.some((a) => a.slug === params.andar)) throw notFound();
     context.queryClient.ensureQueryData(consultoriosQuery);
   },
-  loader: ({ context }) => {
-    context.queryClient.ensureQueryData(consultoriosQuery);
-  },
   component: AndarPage,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-prob">
