@@ -137,3 +137,22 @@ export const historicoQuery = (id: string) =>
       return (data ?? []) as unknown as Historico[];
     },
   });
+
+export type HistoricoRecente = Historico & {
+  consultorios: { numero: string; andar: string } | null;
+};
+
+export const historicoRecenteQuery = queryOptions({
+  queryKey: ["historico-recente"],
+  queryFn: async (): Promise<HistoricoRecente[]> => {
+    const { data, error } = await supabase
+      .from("historico")
+      .select("*, consultorios(numero, andar)")
+      .order("data", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(12);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as HistoricoRecente[];
+  },
+});
+
