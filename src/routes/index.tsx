@@ -30,6 +30,7 @@ export const Route = createFileRoute("/")({
   }),
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(consultoriosQuery);
+    context.queryClient.ensureQueryData(historicoRecenteQuery);
   },
   component: VisaoGeral,
   errorComponent: ({ error }) => (
@@ -42,6 +43,7 @@ export const Route = createFileRoute("/")({
 
 function VisaoGeral() {
   const { data: consultorios } = useSuspenseQuery(consultoriosQuery);
+  const { data: recentes } = useSuspenseQuery(historicoRecenteQuery);
   const [busca, setBusca] = useState("");
 
   const termo = busca.trim().toLowerCase();
