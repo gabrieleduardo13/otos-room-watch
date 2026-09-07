@@ -87,7 +87,7 @@ function AndarPage() {
             className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 hover:bg-glow/5"
           >
             <span className="flex items-center gap-3">
-              <span className="grid h-10 min-w-10 place-items-center rounded-md bg-brand px-2 text-center font-mono text-xs font-semibold text-panel">
+              <span className="grid h-10 min-w-10 place-items-center whitespace-nowrap rounded-md bg-brand px-2 text-center font-mono text-xs font-semibold text-panel">
                 {c.numero}
               </span>
               <span className="leading-tight">
