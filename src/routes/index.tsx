@@ -47,7 +47,7 @@ function VisaoGeral() {
   const resultados = useMemo(() => {
     if (!termo) return [];
     return consultorios.filter((c) =>
-      [c.numero, c.medico1_nome, c.medico2_nome, c.especialidade]
+      [c.numero, c.medico1_nome, c.medico2_nome, c.medico3_nome, c.especialidade]
         .filter(Boolean)
         .some((v) => (v as string).toLowerCase().includes(termo)),
     );
@@ -113,7 +113,7 @@ function VisaoGeral() {
               <span className="min-w-0">
                 <span className="block text-sm font-medium">Consultório {c.numero}</span>
                 <span className="block truncate text-xs text-muted">
-                  {[c.medico1_nome, c.medico2_nome].filter(Boolean).join(" · ") || "Sem médicos"}
+                  {[c.medico1_nome, c.medico2_nome, c.medico3_nome].filter(Boolean).join(" · ") || "Sem médicos"}
                 </span>
               </span>
               <span className="flex items-center gap-2">
