@@ -99,7 +99,7 @@ function ConsultorioDetalhe() {
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex items-center gap-3">
-          <span className="grid size-11 place-items-center rounded-md bg-brand font-mono text-sm font-semibold text-panel">
+          <span className="grid h-11 min-w-11 place-items-center whitespace-nowrap rounded-md bg-brand px-2 text-center font-mono text-sm font-semibold text-panel">
             {consultorio.numero}
           </span>
           <div className="leading-tight">
