@@ -230,7 +230,64 @@ function ConsultorioDetalhe() {
   );
 }
 
+function ApagarRegistro({
+  registroId,
+  consultorioId,
+}: {
+  registroId: string;
+  consultorioId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [confirmar, setConfirmar] = useState(false);
+
+  const apagar = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("historico").delete().eq("id", registroId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["historico", consultorioId] });
+      queryClient.invalidateQueries({ queryKey: ["historico-recente"] });
+    },
+  });
+
+  if (!confirmar) {
+    return (
+      <button
+        type="button"
+        aria-label="Apagar este registro"
+        title="Apagar este registro"
+        onClick={() => setConfirmar(true)}
+        className="rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.15em] text-muted hover:bg-prob/10 hover:text-prob"
+      >
+        Apagar
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => apagar.mutate()}
+        disabled={apagar.isPending}
+        className="rounded bg-prob px-1.5 py-0.5 font-mono text-[10px] font-medium text-panel disabled:opacity-60"
+      >
+        {apagar.isPending ? "…" : "Confirmar"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setConfirmar(false)}
+        className="rounded px-1.5 py-0.5 font-mono text-[10px] text-muted hover:text-ink"
+      >
+        Cancelar
+      </button>
+    </span>
+  );
+}
+
 function NovoRegistro({ consultorioId }: { consultorioId: string }) {
+
   const queryClient = useQueryClient();
   const hoje = new Date().toISOString().slice(0, 10);
   const [data, setData] = useState(hoje);
