@@ -98,6 +98,63 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque_itens: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          quantidade: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          quantidade?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      estoque_movimentacoes: {
+        Row: {
+          created_at: string
+          destino: string | null
+          id: string
+          item_key: string
+          motivo: string | null
+          quantidade: number
+          responsavel: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          destino?: string | null
+          id?: string
+          item_key: string
+          motivo?: string | null
+          quantidade?: number
+          responsavel?: string | null
+          tipo?: string
+        }
+        Update: {
+          created_at?: string
+          destino?: string | null
+          id?: string
+          item_key?: string
+          motivo?: string | null
+          quantidade?: number
+          responsavel?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       historico: {
         Row: {
           consultorio_id: string
