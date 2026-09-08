@@ -52,7 +52,33 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </span>
                 </Link>
               ))}
+
+              <Link
+                to="/estoque"
+                activeProps={{
+                  className: "flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-panel",
+                }}
+                inactiveProps={{
+                  className: "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink hover:bg-panel",
+                }}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4 shrink-0"
+                >
+                  <path d="M3 7.5 12 3l9 4.5v9L12 21 3 16.5z" />
+                  <path d="M3 7.5 12 12l9-4.5M12 12v9" />
+                </svg>
+                <span>Controle de Estoque</span>
+              </Link>
             </nav>
+
 
             <div className="rounded-lg bg-panel p-3 ring-1 ring-black/5">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted">

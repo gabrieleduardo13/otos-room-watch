@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as AndarAndarRouteImport } from './routes/andar.$andar'
 import { Route as ConsultorioIdRouteImport } from './routes/consultorio.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstoqueRoute = EstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AndarAndarRoute = AndarAndarRouteImport.update({
@@ -31,30 +37,34 @@ const ConsultorioIdRoute = ConsultorioIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/andar/$andar' | '/consultorio/$id'
+  fullPaths: '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/andar/$andar' | '/consultorio/$id'
-  id: '__root__' | '/' | '/andar/$andar' | '/consultorio/$id'
+  to: '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
+  id: '__root__' | '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EstoqueRoute: typeof EstoqueRoute
   AndarAndarRoute: typeof AndarAndarRoute
   ConsultorioIdRoute: typeof ConsultorioIdRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/estoque': {
+      id: '/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof EstoqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/andar/$andar': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EstoqueRoute: EstoqueRoute,
   AndarAndarRoute: AndarAndarRoute,
   ConsultorioIdRoute: ConsultorioIdRoute,
 }
