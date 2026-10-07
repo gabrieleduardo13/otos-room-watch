@@ -26,6 +26,7 @@ const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "
 const FULL_MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const STATUS_LABELS = { ok: "OK", attention: "Atenção", late: "Atrasado" };
 const STATUS_TONES = { ok: "bg-ok/10 text-ok ring-ok/20", attention: "bg-attn/10 text-attn ring-attn/20", late: "bg-prob/10 text-prob ring-prob/20" };
+const STATUS_DOTS = { ok: "bg-ok", attention: "bg-attn", late: "bg-prob" };
 type Schedule = { realizados: Record<string, string>; programados: number[] };
 type Room = Schedule & { id: string; setor: string; nome: string; anos?: Record<string, Schedule> };
 type Modal = { type: "room"; room?: Room } | { type: "delete"; room: Room } | { type: "month"; room: Room; month: number };
@@ -802,10 +803,18 @@ function normalize(text: string) { return text.normalize("NFD").replace(/[\u0300
 function roomStatus(room: Room, year: number, today: Date) {
   const current = today.getFullYear() * 12 + today.getMonth();
   const selected = schedule(room, year);
-  const pending = selected.programados.filter(m => !selected.realizados[m]);
+  const completed = [BASE_YEAR, ...Object.keys(room.anos ?? {}).map(Number)]
+    .flatMap(y => Object.entries(schedule(room, y).realizados)
+      .filter(([, value]) => value.trim())
+      .map(([m]) => y * 12 + Number(m)));
+  const pending = selected.programados.filter(m => !completed.some(done => done >= year * 12 + m));
   if (pending.some(m => year * 12 + m < current)) return "late";
-  if (pending.some(m => year * 12 + m === current)) return "attention";
+  if (pending.some(m => year * 12 + m === current || year * 12 + m === current + 1)) return "attention";
   return "ok";
+}
+
+function RoomStatusDot({ status }: { status: keyof typeof STATUS_LABELS }) {
+  return <span role="img" aria-label={`Status: ${STATUS_LABELS[status]}`} title={STATUS_LABELS[status]} className={`inline-block size-2 shrink-0 rounded-full ${STATUS_DOTS[status]}`} />;
 }
 
 function AirConditioning() {
@@ -816,6 +825,8 @@ function AirConditioning() {
   const [search, setSearch] = useState("");
   const [year, setYear] = useState(BASE_YEAR);
   const [today, setToday] = useState(new Date(BASE_YEAR, 0, 1));
+  const [view, setView] = useState<"schedule" | "report">("schedule");
+  const [reportMonth, setReportMonth] = useState(0);
   const [modal, setModal] = useState<Modal | null>(null);
   const [name, setName] = useState("");
   const [roomSector, setRoomSector] = useState<string>(SECTORS[0]);
@@ -823,7 +834,7 @@ function AirConditioning() {
   const [autoSchedule, setAutoSchedule] = useState(true);
   useEffect(() => {
     const now = new Date();
-    setToday(now); setYear(now.getFullYear());
+    setToday(now); setYear(now.getFullYear()); setReportMonth(now.getMonth());
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved !== null) {
@@ -850,6 +861,7 @@ function AirConditioning() {
   }
   const visible = rooms.filter(r => (sector === "Todos" || r.setor === sector) && normalize(r.nome).includes(normalize(search.trim())));
   const counts = visible.reduce((acc, r) => { acc[roomStatus(r, year, today)]++; return acc; }, { ok: 0, attention: 0, late: 0 });
+  const monthlyCompleted = visible.filter(room => schedule(room, year).realizados[reportMonth]?.trim());
   function openRoom(room?: Room) {
     setName(room?.nome ?? ""); setRoomSector(room?.setor ?? (sector === "Todos" ? SECTORS[0] : sector));
     setModal(room ? { type: "room", room } : { type: "room" });
@@ -911,13 +923,17 @@ function AirConditioning() {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {[
           { title: "Situação OK", value: counts.ok, tone: "text-ok", ring: "ring-ok/20", subtitle: "limpeza em dia" },
-          { title: "Atenção / Este mês", value: counts.attention, tone: "text-attn", ring: "ring-attn/20", subtitle: "limpezas programadas neste mês" },
+          { title: "Atenção", value: counts.attention, tone: "text-attn", ring: "ring-attn/20", subtitle: "limpezas neste mês ou no próximo" },
           { title: "Atrasados / Pendentes", value: counts.late, tone: "text-prob", ring: "ring-prob/20", subtitle: "ambientes com limpeza pendente" },
         ].map(c => <div key={c.title} className={`rounded-lg bg-panel p-4 ring-1 ${c.ring}`}>
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted">{c.title}</p>
           <p className={`mt-2 font-mono text-3xl font-semibold ${c.tone}`}>{c.value}</p>
           <p className="mt-1 text-xs text-muted">{c.subtitle}</p>
         </div>)}
+      </div>
+      <div className="mt-5 flex gap-2 border-b border-line pb-3" role="tablist" aria-label="Visão de Ar-Condicionado">
+        <Button role="tab" aria-selected={view === "schedule"} aria-controls="ac-schedule" id="ac-schedule-tab" className="min-h-11" variant={view === "schedule" ? "default" : "ghost"} onClick={() => setView("schedule")}>Cronograma</Button>
+        <Button role="tab" aria-selected={view === "report"} aria-controls="ac-report" id="ac-report-tab" className="min-h-11" variant={view === "report" ? "default" : "ghost"} onClick={() => setView("report")}>Relatório Mensal</Button>
       </div>
       <div className="mt-6 flex gap-1 overflow-x-auto whitespace-nowrap border-b border-line pb-3 md:flex-wrap" role="tablist" aria-label="Filtrar por setor">
         {["Todos", ...SECTORS].map(s => <Button key={s} role="tab" aria-selected={sector === s} variant={sector === s ? "default" : "ghost"} size="sm" className="min-h-11 shrink-0 md:min-h-8" onClick={() => setSector(s)}>
@@ -934,6 +950,7 @@ function AirConditioning() {
           <Button variant="ghost" size="icon" title="Próximo ano" aria-label="Próximo ano" onClick={() => setYear(y => y + 1)} disabled={year >= 2099}><ChevronRight /></Button>
         </div>
       </div>
+      {view === "schedule" ? <div id="ac-schedule" role="tabpanel" aria-labelledby="ac-schedule-tab">
       <div className="hidden max-w-full overflow-x-auto border-y border-line md:block">
         <table className="w-full min-w-[1450px] border-separate border-spacing-0 text-left text-sm">
           <thead><tr><th scope="col" className="sticky left-0 z-20 w-64 border-b border-line bg-panel px-3 py-3 font-mono text-[10px] uppercase text-muted">Sala / Ambiente</th>
@@ -943,7 +960,7 @@ function AirConditioning() {
             const s = schedule(room, year);
             return <tr key={room.id}>
               <th scope="row" className="sticky left-0 z-10 border-b border-line bg-panel px-3 py-3 font-normal">
-                <div className="flex items-center justify-between gap-2"><span className="min-w-0 break-words font-medium">{room.nome}</span>
+                <div className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2 font-medium"><RoomStatusDot status={roomStatus(room, year, today)} /><span className="min-w-0 break-words">{room.nome}</span></span>
                   <div className="flex shrink-0"><Button variant="ghost" size="icon" className="size-7 text-muted" title={`Editar ${room.nome}`} aria-label={`Editar ${room.nome}`} onClick={() => openRoom(room)}><Pencil className="size-3.5" /></Button>
                     <Button variant="ghost" size="icon" className="size-7 text-muted hover:bg-prob/10 hover:text-prob" title={`Excluir ${room.nome}`} aria-label={`Excluir ${room.nome}`} onClick={() => setModal({ type: "delete", room })}><Trash2 className="size-3.5" /></Button></div>
                 </div><span className="mt-1 inline-block rounded bg-brand/10 px-1.5 py-0.5 font-mono text-[9px] text-brand">{room.setor}</span>
@@ -965,7 +982,7 @@ function AirConditioning() {
           const nextMonth = [...s.programados].filter(m => !s.realizados[m]).sort((a, b) => a - b)[0];
           return <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-              <h2 className="min-w-0 break-words text-lg font-semibold">{room.nome}</h2>
+              <h2 className="flex min-w-0 items-center gap-2 text-lg font-semibold"><RoomStatusDot status={status} /><span className="min-w-0 break-words">{room.nome}</span></h2>
               <div className="flex shrink-0">
                 <Button variant="ghost" size="icon" className="size-11 text-muted" title={`Editar ${room.nome}`} aria-label={`Editar ${room.nome}`} onClick={() => openRoom(room)}><Pencil /></Button>
                 <Button variant="ghost" size="icon" className="size-11 text-muted hover:bg-prob/10 hover:text-prob" title={`Excluir ${room.nome}`} aria-label={`Excluir ${room.nome}`} onClick={() => setModal({ type: "delete", room })}><Trash2 /></Button>
@@ -982,6 +999,21 @@ function AirConditioning() {
       </div>
       {visible.length === 0 && <p className="py-8 text-center text-sm text-muted">Nenhum ambiente encontrado.</p>}
       <div className="mt-3 flex flex-wrap justify-between gap-2 font-mono text-[10px] text-muted"><span>{visible.length} ambientes · {year}</span><span className="flex gap-4"><span className="text-ok">✓ Realizado</span><span className="text-prob">Programado</span></span></div>
+      </div> : <section id="ac-report" role="tabpanel" aria-labelledby="ac-report-tab" className="border-t border-line pt-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <label className={`${label} w-full sm:w-60`}>Mês do relatório
+            <select aria-label="Mês do relatório" className={`${field} min-h-12`} value={reportMonth} onChange={e => setReportMonth(Number(e.target.value))}>{FULL_MONTHS.map((month, i) => <option key={month} value={i}>{month}</option>)}</select>
+          </label>
+          <p className="text-sm text-ink">Total de limpezas realizadas em {FULL_MONTHS[reportMonth]}: <strong className="font-mono text-lg text-ok">{monthlyCompleted.length}</strong><span className="ml-2 text-muted">· {year}</span></p>
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {monthlyCompleted.map(room => <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
+            <h2 className="break-words font-semibold">{room.nome} <span className="font-normal text-muted">({room.setor})</span></h2>
+            <p className="mt-2 flex items-start gap-2 text-sm text-ok"><Check className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 break-words">Limpeza realizada: {schedule(room, year).realizados[reportMonth]}</span></p>
+          </article>)}
+        </div>
+        {monthlyCompleted.length === 0 && <p className="py-8 text-center text-sm text-muted">Nenhuma limpeza realizada em {FULL_MONTHS[reportMonth]} de {year} para os filtros selecionados.</p>}
+      </section>}
     </>}
     <Dialog.Root open={modal !== null} onOpenChange={open => { if (!open) setModal(null); }}>
       <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-40 bg-ink/40" />
