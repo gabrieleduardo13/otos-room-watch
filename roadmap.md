@@ -11,3 +11,9 @@
 # CSV para Excel no Windows
 - [x] Usar BOM UTF-8, primeira linha sep=;, cinco cabeçalhos exatos e Nenhuma para listas vazias.
 - [x] Conferir download, cards no celular, tabela no computador e botões do modal sem alterar dados.
+
+# Ajustes finais de Ar-Condicionado
+- [x] Exibir bolinhas de status na tabela e nos cards.
+- [x] Corrigir atrasos cobertos por limpezas posteriores e atenção no mês atual ou seguinte.
+- [x] Adicionar Relatório Mensal com seleção de mês, total e limpezas realizadas.
+- [x] Verificar status, relatório e apresentação sem alterar os dados salvos.
