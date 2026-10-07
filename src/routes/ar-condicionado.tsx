@@ -886,13 +886,13 @@ function AirConditioning() {
     if (persist(rooms.map(r => r.id === room.id ? updated : r))) setModal(null);
   }
   function exportCSV() {
-    const rows = [["Setor", "Ambiente", "Status Atual", "Limpezas Programadas (Meses)", "Limpezas Realizadas (Histórico)"], ...visible.map(r => {
+    const rows = [["Setor", "Ambiente", "Status Atual", "Limpezas Programadas", "Limpezas Realizadas"], ...visible.map(r => {
       const s = schedule(r, year);
       const planned = [...s.programados].sort((a, b) => a - b).map(m => FULL_MONTHS[m]).join(", ");
       const completed = Object.entries(s.realizados).sort(([a], [b]) => Number(a) - Number(b)).map(([, value]) => value.trim()).filter(Boolean).join(", ");
-      return [r.setor, r.nome, STATUS_LABELS[roomStatus(r, year, today)], planned, completed];
+      return [r.setor, r.nome, STATUS_LABELS[roomStatus(r, year, today)], planned || "Nenhuma", completed || "Nenhuma"];
     })];
-    const csv = "\uFEFF" + rows.map(row => row.map(v => `"${(/^[=+@-]/.test(v) ? "'" + v : v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const csv = "\uFEFFsep=;\n" + rows.map(row => row.map(v => `"${(/^[=+@-]/.test(v) ? "'" + v : v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a"); a.href = url; a.download = `otos-ar-condicionado-${year}.csv`; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -988,7 +988,7 @@ function AirConditioning() {
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-line bg-panel p-6 text-ink" aria-describedby="ac-modal-description">
           <Dialog.Title className="pr-8 text-lg font-semibold">{modal?.type === "room" ? modal.room ? "Editar sala" : "Nova sala" : modal?.type === "delete" ? "Excluir ambiente?" : "Limpeza do ar-condicionado"}</Dialog.Title>
           <Dialog.Description id="ac-modal-description" className="mt-1 text-sm text-muted">{modal?.type === "month" ? `${modal.room.nome} · ${MONTHS[modal.month]} / ${year}` : modal?.type === "delete" ? modal.room.nome : "Sala / Ambiente"}</Dialog.Description>
-          <Dialog.Close asChild><Button variant="ghost" size="icon" className="absolute right-3 top-3" title="Fechar" aria-label="Fechar"><X /></Button></Dialog.Close>
+          <Dialog.Close asChild><Button variant="ghost" size="icon" className="absolute right-3 top-3 size-11" title="Fechar" aria-label="Fechar"><X /></Button></Dialog.Close>
           {error && <p role="alert" className="mt-3 text-sm text-prob">{error}</p>}
           {modal?.type === "room" && <form className="mt-5 space-y-4" onSubmit={e => {
             e.preventDefault(); if (!name.trim()) return;
