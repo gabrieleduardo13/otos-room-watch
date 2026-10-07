@@ -7,3 +7,7 @@
 - [x] Mostrar cards no celular e manter tabela no computador, com abas roláveis e controles confortáveis ao toque.
 - [x] Exportar CSV executivo com meses por extenso, histórico legível e BOM UTF-8.
 - [x] Verificar apresentação e download sem alterar os dados existentes.
+
+# CSV para Excel no Windows
+- [x] Usar BOM UTF-8, primeira linha sep=;, cinco cabeçalhos exatos e Nenhuma para listas vazias.
+- [x] Conferir download, cards no celular, tabela no computador e botões do modal sem alterar dados.
