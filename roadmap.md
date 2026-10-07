@@ -4,6 +4,6 @@
 - [x] Verificar os fluxos e a apresentação; aplicar atualização obrigatória dos pacotes.
 
 # Refinamento de usabilidade
-- [ ] Mostrar cards no celular e manter tabela no computador, com abas roláveis e controles confortáveis ao toque.
-- [ ] Exportar CSV executivo com meses por extenso, histórico legível e BOM UTF-8.
-- [ ] Verificar apresentação e download sem alterar os dados existentes.
+- [x] Mostrar cards no celular e manter tabela no computador, com abas roláveis e controles confortáveis ao toque.
+- [x] Exportar CSV executivo com meses por extenso, histórico legível e BOM UTF-8.
+- [x] Verificar apresentação e download sem alterar os dados existentes.
