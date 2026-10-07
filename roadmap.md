@@ -10,4 +10,4 @@
 
 # CSV para Excel no Windows
 - [x] Usar BOM UTF-8, primeira linha sep=;, cinco cabeçalhos exatos e Nenhuma para listas vazias.
-- [ ] Conferir download, cards no celular, tabela no computador e botões do modal sem alterar dados.
+- [x] Conferir download, cards no celular, tabela no computador e botões do modal sem alterar dados.
