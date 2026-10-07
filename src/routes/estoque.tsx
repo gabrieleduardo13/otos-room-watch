@@ -39,7 +39,7 @@ export const Route = createFileRoute("/estoque")({
   component: Estoque,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-prob">
-      Não foi possível carregar o estoque: {error.message}
+      Não foi possível carregar o estoque: {error instanceof Error ? error.message : "Erro inesperado"}
     </div>
   ),
   notFoundComponent: () => <div className="p-8 text-sm text-muted">Nada por aqui.</div>,

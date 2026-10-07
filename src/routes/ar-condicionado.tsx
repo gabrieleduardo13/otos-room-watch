@@ -23,6 +23,9 @@ const STORAGE_KEY = "otos_ac_schedule_v1";
 const BASE_YEAR = 2026;
 const SECTORS = ["Térreo", "1º Andar", "2º Andar", "Eusébio", "Parquelândia"] as const;
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const FULL_MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const STATUS_LABELS = { ok: "OK", attention: "Atenção", late: "Atrasado" };
+const STATUS_TONES = { ok: "bg-ok/10 text-ok ring-ok/20", attention: "bg-attn/10 text-attn ring-attn/20", late: "bg-prob/10 text-prob ring-prob/20" };
 type Schedule = { realizados: Record<string, string>; programados: number[] };
 type Room = Schedule & { id: string; setor: string; nome: string; anos?: Record<string, Schedule> };
 type Modal = { type: "room"; room?: Room } | { type: "delete"; room: Room } | { type: "month"; room: Room; month: number };
@@ -883,9 +886,11 @@ function AirConditioning() {
     if (persist(rooms.map(r => r.id === room.id ? updated : r))) setModal(null);
   }
   function exportCSV() {
-    const rows = [["Sala / Ambiente", "Setor", "Ano", ...MONTHS], ...visible.map(r => {
+    const rows = [["Setor", "Ambiente", "Status Atual", "Limpezas Programadas (Meses)", "Limpezas Realizadas (Histórico)"], ...visible.map(r => {
       const s = schedule(r, year);
-      return [r.nome, r.setor, String(year), ...MONTHS.map((_, m) => s.realizados[m] ? `Realizado: ${s.realizados[m]}` : s.programados.includes(m) ? "Programado" : "")];
+      const planned = [...s.programados].sort((a, b) => a - b).map(m => FULL_MONTHS[m]).join(", ");
+      const completed = Object.entries(s.realizados).sort(([a], [b]) => Number(a) - Number(b)).map(([, value]) => value.trim()).filter(Boolean).join(", ");
+      return [r.setor, r.nome, STATUS_LABELS[roomStatus(r, year, today)], planned, completed];
     })];
     const csv = "\uFEFF" + rows.map(row => row.map(v => `"${(/^[=+@-]/.test(v) ? "'" + v : v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
@@ -893,10 +898,10 @@ function AirConditioning() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return <AppShell>
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div><p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">Manutenção dos ambientes</p>
-        <h1 className="mt-1 flex items-center gap-3 text-3xl font-semibold leading-tight sm:text-4xl"><Wind className="hidden size-7 text-brand sm:block" />Ar-Condicionado</h1></div>
-      <div className="flex flex-wrap gap-2">
+    <div className="grid min-w-0 gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
+      <div className="min-w-0"><p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">Manutenção dos ambientes</p>
+        <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold leading-tight sm:text-4xl"><Wind className="hidden size-7 shrink-0 text-brand sm:block" />Ar-Condicionado</h1></div>
+      <div className="flex flex-wrap gap-2 [&>button]:min-h-11 sm:[&>button]:min-h-9">
         <Button variant="outline" onClick={exportCSV} disabled={!ready}><Download />Exportar Planilha (CSV)</Button>
         <Button onClick={() => openRoom()} disabled={!ready}><Plus />Nova Sala</Button>
       </div>
@@ -914,12 +919,12 @@ function AirConditioning() {
           <p className="mt-1 text-xs text-muted">{c.subtitle}</p>
         </div>)}
       </div>
-      <div className="mt-6 flex flex-wrap gap-1 border-b border-line pb-3" role="tablist" aria-label="Filtrar por setor">
-        {["Todos", ...SECTORS].map(s => <Button key={s} role="tab" aria-selected={sector === s} variant={sector === s ? "default" : "ghost"} size="sm" onClick={() => setSector(s)}>
+      <div className="mt-6 flex gap-1 overflow-x-auto whitespace-nowrap border-b border-line pb-3 md:flex-wrap" role="tablist" aria-label="Filtrar por setor">
+        {["Todos", ...SECTORS].map(s => <Button key={s} role="tab" aria-selected={sector === s} variant={sector === s ? "default" : "ghost"} size="sm" className="min-h-11 shrink-0 md:min-h-8" onClick={() => setSector(s)}>
           {s}<span className="font-mono text-[10px] opacity-70">{s === "Todos" ? rooms.length : rooms.filter(r => r.setor === s).length}</span>
         </Button>)}
       </div>
-      <div className="my-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="my-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
         <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-panel px-3 py-2 sm:max-w-xs">
           <Search className="size-4 shrink-0 text-muted" /><input aria-label="Buscar sala ou ambiente" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar sala ou ambiente…" className="min-w-0 w-full bg-transparent text-sm outline-none placeholder:text-muted" />
         </div>
@@ -929,7 +934,7 @@ function AirConditioning() {
           <Button variant="ghost" size="icon" title="Próximo ano" aria-label="Próximo ano" onClick={() => setYear(y => y + 1)} disabled={year >= 2099}><ChevronRight /></Button>
         </div>
       </div>
-      <div className="max-w-full overflow-x-auto border-y border-line">
+      <div className="hidden max-w-full overflow-x-auto border-y border-line md:block">
         <table className="w-full min-w-[1450px] border-separate border-spacing-0 text-left text-sm">
           <thead><tr><th scope="col" className="sticky left-0 z-20 w-64 border-b border-line bg-panel px-3 py-3 font-mono text-[10px] uppercase text-muted">Sala / Ambiente</th>
             {MONTHS.map((m,i) => <th scope="col" key={m} className={`w-24 border-b border-line px-2 py-3 text-center font-mono text-xs font-medium ${year === today.getFullYear() && i === today.getMonth() ? "bg-attn/10 text-attn" : "bg-panel text-muted"}`}>{m}</th>)}
@@ -953,6 +958,28 @@ function AirConditioning() {
           })}</tbody>
         </table>
       </div>
+      <div className="block space-y-3 md:hidden">
+        {visible.map(room => {
+          const s = schedule(room, year);
+          const status = roomStatus(room, year, today);
+          const nextMonth = [...s.programados].filter(m => !s.realizados[m]).sort((a, b) => a - b)[0];
+          return <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+              <h2 className="min-w-0 break-words text-lg font-semibold">{room.nome}</h2>
+              <div className="flex shrink-0">
+                <Button variant="ghost" size="icon" className="size-11 text-muted" title={`Editar ${room.nome}`} aria-label={`Editar ${room.nome}`} onClick={() => openRoom(room)}><Pencil /></Button>
+                <Button variant="ghost" size="icon" className="size-11 text-muted hover:bg-prob/10 hover:text-prob" title={`Excluir ${room.nome}`} aria-label={`Excluir ${room.nome}`} onClick={() => setModal({ type: "delete", room })}><Trash2 /></Button>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              <span className="rounded bg-brand/10 px-2 py-1 text-brand">{room.setor}</span>
+              <span className={`rounded px-2 py-1 font-medium ring-1 ${STATUS_TONES[status]}`}>{STATUS_LABELS[status]}</span>
+            </div>
+            <p className="mt-4 text-sm text-muted">Próxima Limpeza: <span className="font-medium text-ink">{nextMonth === undefined ? "Não programada" : `${FULL_MONTHS[nextMonth]} / ${year}`}</span></p>
+            <Button className="mt-4 h-auto min-h-12 w-full whitespace-normal py-3" onClick={() => openMonth(room, nextMonth ?? (year === today.getFullYear() ? today.getMonth() : 0))}><Check />Dar Baixa / Gerenciar</Button>
+          </article>;
+        })}
+      </div>
       {visible.length === 0 && <p className="py-8 text-center text-sm text-muted">Nenhum ambiente encontrado.</p>}
       <div className="mt-3 flex flex-wrap justify-between gap-2 font-mono text-[10px] text-muted"><span>{visible.length} ambientes · {year}</span><span className="flex gap-4"><span className="text-ok">✓ Realizado</span><span className="text-prob">Programado</span></span></div>
     </>}
@@ -971,16 +998,17 @@ function AirConditioning() {
           }}>
             <label className={label}>Nome da sala / ambiente<input className={field} value={name} onChange={e => setName(e.target.value)} required maxLength={100} autoFocus /></label>
             <label className={label}>Setor<select className={field} value={roomSector} onChange={e => setRoomSector(e.target.value)}>{SECTORS.map(s => <option key={s}>{s}</option>)}</select></label>
-            <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button type="submit" disabled={!name.trim()}>Salvar sala</Button></div>
+            <div className="grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button type="button" variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button type="submit" disabled={!name.trim()}>Salvar sala</Button></div>
           </form>}
-          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (persist(rooms.filter(r => r.id !== modal.room.id))) setModal(null); }}>Excluir ambiente</Button></div></div>}
+          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (persist(rooms.filter(r => r.id !== modal.room.id))) setModal(null); }}>Excluir ambiente</Button></div></div>}
           {modal?.type === "month" && <div className="mt-5">
+            <label className={`${label} mb-4`}>Mês da limpeza<select className={field} value={modal.month} onChange={e => openMonth(modal.room, Number(e.target.value))}>{FULL_MONTHS.map((month, i) => <option key={month} value={i}>{month}</option>)}</select></label>
             <form onSubmit={e => { e.preventDefault(); updateMonth("done"); }}>
               <label className={label}>Data realizada ou observação<input className={field} value={text} onChange={e => setText(e.target.value)} placeholder="07/10 ou observação curta" required maxLength={60} autoFocus /></label>
-              <label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" className="mt-0.5 size-4 accent-brand" checked={autoSchedule} onChange={e => setAutoSchedule(e.target.checked)} />Agendar próxima limpeza automaticamente daqui a 4 meses</label>
-              <Button type="submit" className="mt-4 w-full" disabled={!text.trim()}><Check />Dar baixa · Salvar limpeza</Button>
+              <label className="mt-4 flex min-h-11 items-start gap-3 py-2 text-sm"><input type="checkbox" className="size-5 shrink-0 accent-brand" checked={autoSchedule} onChange={e => setAutoSchedule(e.target.checked)} />Agendar próxima limpeza automaticamente daqui a 4 meses</label>
+              <Button type="submit" className="mt-4 h-auto min-h-12 w-full whitespace-normal py-3" disabled={!text.trim()}><Check />Dar baixa · Salvar limpeza</Button>
             </form>
-            <div className="mt-5 flex flex-wrap gap-2 border-t border-line pt-4"><Button variant="outline" className="flex-1 text-prob" onClick={() => updateMonth("toggle")}>{schedule(modal.room, year).programados.includes(modal.month) ? "Desmarcar programado" : "Marcar programado"}</Button><Button variant="ghost" className="text-muted" onClick={() => updateMonth("clear")}><Trash2 />Limpar mês</Button></div>
+            <div className="mt-5 grid gap-2 border-t border-line pt-4 [&>button]:h-auto [&>button]:min-h-12 [&>button]:w-full [&>button]:whitespace-normal [&>button]:py-3"><Button variant="outline" className="text-prob" onClick={() => updateMonth("toggle")}>{schedule(modal.room, year).programados.includes(modal.month) ? "Desmarcar programado" : "Marcar programado"}</Button><Button variant="ghost" className="text-muted" onClick={() => updateMonth("clear")}><Trash2 />Limpar mês</Button></div>
           </div>}
         </Dialog.Content>
       </Dialog.Portal>

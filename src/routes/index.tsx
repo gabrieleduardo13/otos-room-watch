@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
   component: VisaoGeral,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-prob">
-      Não foi possível carregar os consultórios: {error.message}
+      Não foi possível carregar os consultórios: {error instanceof Error ? error.message : "Erro inesperado"}
     </div>
   ),
   notFoundComponent: () => <div className="p-8 text-sm text-muted">Nada por aqui.</div>,
