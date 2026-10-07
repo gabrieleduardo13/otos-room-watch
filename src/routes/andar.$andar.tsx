@@ -38,7 +38,7 @@ export const Route = createFileRoute("/andar/$andar")({
   component: AndarPage,
   errorComponent: ({ error }) => (
     <div role="alert" className="p-8 text-sm text-prob">
-      Não foi possível carregar este andar: {error.message}
+      Não foi possível carregar este andar: {error instanceof Error ? error.message : "Erro inesperado"}
     </div>
   ),
   notFoundComponent: () => (
