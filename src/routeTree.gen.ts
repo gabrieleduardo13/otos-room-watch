@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArCondicionadoRouteImport } from './routes/ar-condicionado'
 import { Route as EstoqueRouteImport } from './routes/estoque'
 import { Route as AndarAndarRouteImport } from './routes/andar.$andar'
 import { Route as ConsultorioIdRouteImport } from './routes/consultorio.$id'
@@ -17,6 +18,11 @@ import { Route as ConsultorioIdRouteImport } from './routes/consultorio.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArCondicionadoRoute = ArCondicionadoRouteImport.update({
+  id: '/ar-condicionado',
+  path: '/ar-condicionado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EstoqueRoute = EstoqueRouteImport.update({
@@ -37,12 +43,14 @@ const ConsultorioIdRoute = ConsultorioIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ar-condicionado': typeof ArCondicionadoRoute
   '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ar-condicionado': typeof ArCondicionadoRoute
   '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
@@ -50,20 +58,30 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ar-condicionado': typeof ArCondicionadoRoute
   '/estoque': typeof EstoqueRoute
   '/andar/$andar': typeof AndarAndarRoute
   '/consultorio/$id': typeof ConsultorioIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
+  fullPaths:
+    '/' | '/ar-condicionado' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
-  id: '__root__' | '/' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
+  to:
+    '/' | '/ar-condicionado' | '/estoque' | '/andar/$andar' | '/consultorio/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/ar-condicionado'
+    | '/estoque'
+    | '/andar/$andar'
+    | '/consultorio/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArCondicionadoRoute: typeof ArCondicionadoRoute
   EstoqueRoute: typeof EstoqueRoute
   AndarAndarRoute: typeof AndarAndarRoute
   ConsultorioIdRoute: typeof ConsultorioIdRoute
@@ -76,6 +94,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar-condicionado': {
+      id: '/ar-condicionado'
+      path: '/ar-condicionado'
+      fullPath: '/ar-condicionado'
+      preLoaderRoute: typeof ArCondicionadoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/estoque': {
@@ -104,6 +129,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArCondicionadoRoute: ArCondicionadoRoute,
   EstoqueRoute: EstoqueRoute,
   AndarAndarRoute: AndarAndarRoute,
   ConsultorioIdRoute: ConsultorioIdRoute,

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { Wind } from "lucide-react";
 import { ANDARES, consultoriosQuery } from "@/lib/consultorios";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -77,6 +78,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </svg>
                 <span>Controle de Estoque</span>
               </Link>
+              <Link
+                to="/ar-condicionado"
+                activeProps={{ className: "flex items-center gap-2 rounded-md bg-brand px-3 py-2 text-sm font-medium text-panel" }}
+                inactiveProps={{ className: "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink hover:bg-panel" }}
+              >
+                <Wind aria-hidden="true" className="size-4 shrink-0" />
+                <span>Ar-Condicionado</span>
+              </Link>
             </nav>
 
 
@@ -90,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="lg:col-span-9">{children}</main>
+        <main className="min-w-0 lg:col-span-9">{children}</main>
       </div>
     </div>
   );
