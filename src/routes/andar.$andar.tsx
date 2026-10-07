@@ -16,6 +16,8 @@ export const Route = createFileRoute("/andar/$andar")({
     const label = andarLabel(params.andar);
     return {
       meta: [
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
         { title: `${label} — Consultórios OTOS` },
         {
           name: "description",

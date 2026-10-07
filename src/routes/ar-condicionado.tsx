@@ -790,9 +790,9 @@ function validSchedule(value: unknown): value is Schedule {
     && Array.isArray(s.programados) && s.programados.every(m => Number.isInteger(m) && m >= 0 && m < 12);
 }
 function validRooms(value: unknown): value is Room[] {
-  return Array.isArray(value) && value.every(r => validSchedule(r) && typeof r.id === "string"
+  return Array.isArray(value) && value.every(r => r && typeof r === "object" && typeof r.id === "string"
     && typeof r.nome === "string" && SECTORS.includes(r.setor)
-    && (!r.anos || (typeof r.anos === "object" && Object.entries(r.anos).every(([y, s]) => /^\d{4}$/.test(y) && validSchedule(s)))))
+    && (!r.anos || (typeof r.anos === "object" && Object.entries(r.anos).every(([y, s]) => /^\d{4}$/.test(y) && validSchedule(s)))) && validSchedule(r))
     && new Set(value.map(r => r.id)).size === value.length;
 }
 function normalize(text: string) { return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
@@ -849,7 +849,7 @@ function AirConditioning() {
   const counts = visible.reduce((acc, r) => { acc[roomStatus(r, year, today)]++; return acc; }, { ok: 0, attention: 0, late: 0 });
   function openRoom(room?: Room) {
     setName(room?.nome ?? ""); setRoomSector(room?.setor ?? (sector === "Todos" ? SECTORS[0] : sector));
-    setModal({ type: "room", room });
+    setModal(room ? { type: "room", room } : { type: "room" });
   }
   function openMonth(room: Room, month: number) {
     const defaultDate = today.getFullYear() === year && today.getMonth() === month
