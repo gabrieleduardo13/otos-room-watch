@@ -984,7 +984,6 @@ function AirConditioning() {
       </div>
       <div className="block space-y-3 md:hidden">
         {visible.map(room => {
-          const s = schedule(room, year);
           const status = roomStatus(room, year, today);
           const nextMonth = pendingMonths(room, year).sort((a, b) => a - b)[0];
           return <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
