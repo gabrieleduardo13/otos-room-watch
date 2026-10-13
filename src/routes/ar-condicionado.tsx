@@ -842,30 +842,38 @@ function AirConditioning() {
   useEffect(() => {
     const now = new Date();
     setToday(now); setYear(now.getFullYear()); setReportMonth(now.getMonth());
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null) {
-        const parsed: unknown = JSON.parse(saved);
-        if (!validRooms(parsed)) throw new Error("invalid");
-        setRooms(parsed);
-      } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ROOMS));
-        setRooms(INITIAL_ROOMS);
-      }
-      setReady(true);
-    } catch {
-      setError("Não foi possível ler os dados salvos neste navegador. Eles não foram substituídos. Verifique se o armazenamento do navegador está disponível e recarregue a página.");
-    }
+    let active = true;
+    const load = async () => {
+      const { data, error: err } = await supabase.from("ac_schedule").select("*").order("posicao").order("created_at");
+      if (!active) return;
+      if (err) { setError("Não foi possível carregar os dados do servidor. Verifique a conexão e recarregue a página."); return; }
+      setRooms((data ?? []).map(fromRow)); setReady(true); setError("");
+    };
+    void load();
+    const channel = supabase.channel("ac_schedule_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ac_schedule" }, () => { void load(); })
+      .subscribe();
+    return () => { active = false; void supabase.removeChannel(channel); };
   }, []);
-  function persist(next: Room[]) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setRooms(next); setError(""); return true;
-    } catch {
-      setError("Não foi possível salvar. A alteração não foi aplicada; verifique o espaço e as permissões deste navegador.");
+  async function persist(next: Room[]) {
+    const nextIds = new Set(next.map(r => r.id));
+    const removed = rooms.filter(r => !nextIds.has(r.id)).map(r => r.id);
+    const changed = next.filter(r => { const old = rooms.find(o => o.id === r.id); return !old || JSON.stringify(old) !== JSON.stringify(r); });
+    const maxPos = rooms.reduce((m, r) => Math.max(m, r.posicao ?? 0), 0);
+    const prev = rooms;
+    setRooms(next);
+    const ops: PromiseLike<{ error: unknown }>[] = [];
+    if (removed.length) ops.push(supabase.from("ac_schedule").delete().in("id", removed));
+    if (changed.length) ops.push(supabase.from("ac_schedule").upsert(changed.map((r, i) => toRow(r, r.posicao ?? maxPos + 1 + i))));
+    const results = await Promise.all(ops);
+    if (results.some(r => r.error)) {
+      setRooms(prev);
+      setError("Não foi possível salvar no servidor. A alteração não foi aplicada; verifique a conexão.");
       return false;
     }
+    setError(""); return true;
   }
+
   const visible = rooms.filter(r => (sector === "Todos" || r.setor === sector) && normalize(r.nome).includes(normalize(search.trim())));
   const counts = visible.reduce((acc, r) => { acc[roomStatus(r, year, today)]++; return acc; }, { ok: 0, attention: 0, late: 0 });
   const monthlyCompleted = visible.filter(room => schedule(room, year).realizados[reportMonth]?.trim());
@@ -902,7 +910,7 @@ function AirConditioning() {
         updated = putSchedule(updated, futureYear, { ...future, programados: [...new Set([...future.programados, futureMonth])].sort((a,b) => a-b) });
       }
     }
-    if (persist(rooms.map(r => r.id === room.id ? updated : r))) setModal(null);
+    void persist(rooms.map(r => r.id === room.id ? updated : r)).then(ok => ok && setModal(null));
   }
   function exportCSV() {
     const rows = [["Setor", "Ambiente", "Status Atual", "Limpezas Programadas", "Limpezas Realizadas"], ...visible.map(r => {
@@ -1032,13 +1040,13 @@ function AirConditioning() {
             e.preventDefault(); if (!name.trim()) return;
             const next = modal.room ? rooms.map(r => r.id === modal.room?.id ? { ...r, nome: name.trim(), setor: roomSector } : r)
               : [...rooms, { id: crypto.randomUUID(), nome: name.trim(), setor: roomSector, realizados: {}, programados: [] }];
-            if (persist(next)) setModal(null);
+            void persist(next).then(ok => ok && setModal(null));
           }}>
             <label className={label}>Nome da sala / ambiente<input className={field} value={name} onChange={e => setName(e.target.value)} required maxLength={100} autoFocus /></label>
             <label className={label}>Setor<select className={field} value={roomSector} onChange={e => setRoomSector(e.target.value)}>{SECTORS.map(s => <option key={s}>{s}</option>)}</select></label>
             <div className="grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button type="button" variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button type="submit" disabled={!name.trim()}>Salvar sala</Button></div>
           </form>}
-          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (persist(rooms.filter(r => r.id !== modal.room.id))) setModal(null); }}>Excluir ambiente</Button></div></div>}
+          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { void persist(rooms.filter(r => r.id !== modal.room.id)).then(ok => ok && setModal(null)); }}>Excluir ambiente</Button></div></div>}
           {modal?.type === "month" && <div className="mt-5">
             <label className={`${label} mb-4`}>Mês da limpeza<select className={field} value={modal.month} onChange={e => openMonth(modal.room, Number(e.target.value))}>{FULL_MONTHS.map((month, i) => <option key={month} value={i}>{month}</option>)}</select></label>
             <form onSubmit={e => { e.preventDefault(); updateMonth("done"); }}>
