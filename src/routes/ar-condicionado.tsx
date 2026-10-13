@@ -986,7 +986,7 @@ function AirConditioning() {
         {visible.map(room => {
           const s = schedule(room, year);
           const status = roomStatus(room, year, today);
-          const nextMonth = [...s.programados].filter(m => !s.realizados[m]).sort((a, b) => a - b)[0];
+          const nextMonth = pendingMonths(room, year).sort((a, b) => a - b)[0];
           return <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
               <h2 className="flex min-w-0 items-center gap-2 text-lg font-semibold"><RoomStatusDot status={status} /><span className="min-w-0 break-words">{room.nome}</span></h2>
