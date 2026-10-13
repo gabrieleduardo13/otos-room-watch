@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ac_schedule: {
+        Row: {
+          anos: Json
+          created_at: string
+          id: string
+          nome: string
+          posicao: number
+          programados: number[]
+          realizados: Json
+          setor: string
+          updated_at: string
+        }
+        Insert: {
+          anos?: Json
+          created_at?: string
+          id?: string
+          nome: string
+          posicao?: number
+          programados?: number[]
+          realizados?: Json
+          setor: string
+          updated_at?: string
+        }
+        Update: {
+          anos?: Json
+          created_at?: string
+          id?: string
+          nome?: string
+          posicao?: number
+          programados?: number[]
+          realizados?: Json
+          setor?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consultorios: {
         Row: {
           andar: string
