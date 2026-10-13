@@ -23,3 +23,8 @@
 - [x] Bolinhas vibrantes com halo (verde/âmbar/vermelho) na tabela e nos cards.
 - [x] Status calculado pela última limpeza realizada: programação anterior a ela não conta como atrasada; atenção apenas no mês atual.
 - [x] Conferir rolagem, bolinhas e contagens no navegador.
+
+# Sincronização global dos Consultórios OTOS
+- [x] Conferir armazenamento existente e preservar os 25 consultórios, quatro itens de estoque e histórico, sem duplicar dados.
+- [x] Ativar Realtime para consultórios, estoque e histórico e atualizar as consultas em todas as páginas.
+- [x] Verificar gravação, leitura e sincronização entre duas telas mantendo o layout; restaurar status e saldo originais e apagar registro temporário.
