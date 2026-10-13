@@ -26,7 +26,11 @@ const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "
 const FULL_MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const STATUS_LABELS = { ok: "OK", attention: "Atenção", late: "Atrasado" };
 const STATUS_TONES = { ok: "bg-ok/10 text-ok ring-ok/20", attention: "bg-attn/10 text-attn ring-attn/20", late: "bg-prob/10 text-prob ring-prob/20" };
-const STATUS_DOTS = { ok: "bg-ok", attention: "bg-attn", late: "bg-prob" };
+const STATUS_DOTS = {
+  ok: "bg-emerald-500 ring-4 ring-emerald-500/20",
+  attention: "bg-amber-500 ring-4 ring-amber-500/25",
+  late: "bg-red-600 ring-4 ring-red-600/25",
+};
 type Schedule = { realizados: Record<string, string>; programados: number[] };
 type Room = Schedule & { id: string; setor: string; nome: string; anos?: Record<string, Schedule> };
 type Modal = { type: "room"; room?: Room } | { type: "delete"; room: Room } | { type: "month"; room: Room; month: number };
@@ -800,16 +804,19 @@ function validRooms(value: unknown): value is Room[] {
     && new Set(value.map(r => r.id)).size === value.length;
 }
 function normalize(text: string) { return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
-function roomStatus(room: Room, year: number, today: Date) {
-  const current = today.getFullYear() * 12 + today.getMonth();
-  const selected = schedule(room, year);
+function pendingMonths(room: Room, year: number): number[] {
   const completed = [BASE_YEAR, ...Object.keys(room.anos ?? {}).map(Number)]
     .flatMap(y => Object.entries(schedule(room, y).realizados)
       .filter(([, value]) => value.trim())
       .map(([m]) => y * 12 + Number(m)));
-  const pending = selected.programados.filter(m => !completed.some(done => done >= year * 12 + m));
+  const lastDone = completed.length ? Math.max(...completed) : -1;
+  return schedule(room, year).programados.filter(m => year * 12 + m > lastDone);
+}
+function roomStatus(room: Room, year: number, today: Date) {
+  const current = today.getFullYear() * 12 + today.getMonth();
+  const pending = pendingMonths(room, year);
   if (pending.some(m => year * 12 + m < current)) return "late";
-  if (pending.some(m => year * 12 + m === current || year * 12 + m === current + 1)) return "attention";
+  if (pending.some(m => year * 12 + m === current)) return "attention";
   return "ok";
 }
 
@@ -923,7 +930,7 @@ function AirConditioning() {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {[
           { title: "Situação OK", value: counts.ok, tone: "text-ok", ring: "ring-ok/20", subtitle: "limpeza em dia" },
-          { title: "Atenção", value: counts.attention, tone: "text-attn", ring: "ring-attn/20", subtitle: "limpezas neste mês ou no próximo" },
+          { title: "Atenção", value: counts.attention, tone: "text-attn", ring: "ring-attn/20", subtitle: "limpezas neste mês" },
           { title: "Atrasados / Pendentes", value: counts.late, tone: "text-prob", ring: "ring-prob/20", subtitle: "ambientes com limpeza pendente" },
         ].map(c => <div key={c.title} className={`rounded-lg bg-panel p-4 ring-1 ${c.ring}`}>
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted">{c.title}</p>
@@ -951,10 +958,10 @@ function AirConditioning() {
         </div>
       </div>
       {view === "schedule" ? <div id="ac-schedule" role="tabpanel" aria-labelledby="ac-schedule-tab">
-      <div className="hidden max-w-full overflow-x-auto border-y border-line md:block">
+      <div className="relative hidden max-h-[70vh] max-w-full overflow-auto border-y border-line md:block">
         <table className="w-full min-w-[1450px] border-separate border-spacing-0 text-left text-sm">
-          <thead><tr><th scope="col" className="sticky left-0 z-20 w-64 border-b border-line bg-panel px-3 py-3 font-mono text-[10px] uppercase text-muted">Sala / Ambiente</th>
-            {MONTHS.map((m,i) => <th scope="col" key={m} className={`w-24 border-b border-line px-2 py-3 text-center font-mono text-xs font-medium ${year === today.getFullYear() && i === today.getMonth() ? "bg-attn/10 text-attn" : "bg-panel text-muted"}`}>{m}</th>)}
+          <thead><tr><th scope="col" className="sticky left-0 top-0 z-30 w-64 border-b border-line bg-panel px-3 py-3 font-mono text-[10px] uppercase text-muted shadow-sm">Sala / Ambiente</th>
+            {MONTHS.map((m,i) => <th scope="col" key={m} className={`sticky top-0 z-20 w-24 border-b bg-panel px-2 py-3 text-center font-mono text-xs font-medium shadow-sm ${year === today.getFullYear() && i === today.getMonth() ? "border-b-2 border-attn text-attn" : "border-line text-muted"}`}>{m}</th>)}
           </tr></thead>
           <tbody>{visible.map(room => {
             const s = schedule(room, year);
@@ -977,9 +984,8 @@ function AirConditioning() {
       </div>
       <div className="block space-y-3 md:hidden">
         {visible.map(room => {
-          const s = schedule(room, year);
           const status = roomStatus(room, year, today);
-          const nextMonth = [...s.programados].filter(m => !s.realizados[m]).sort((a, b) => a - b)[0];
+          const nextMonth = pendingMonths(room, year).sort((a, b) => a - b)[0];
           return <article key={room.id} className="min-w-0 rounded-lg border border-line bg-panel p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
               <h2 className="flex min-w-0 items-center gap-2 text-lg font-semibold"><RoomStatusDot status={status} /><span className="min-w-0 break-words">{room.nome}</span></h2>

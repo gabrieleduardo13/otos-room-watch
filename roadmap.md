@@ -17,3 +17,9 @@
 - [x] Corrigir atrasos cobertos por limpezas posteriores e atenção no mês atual ou seguinte.
 - [x] Adicionar Relatório Mensal com seleção de mês, total e limpezas realizadas.
 - [x] Verificar status, relatório e apresentação sem alterar os dados salvos.
+
+# Cabeçalho fixo e status corrigido
+- [x] Fixar cabeçalho de meses (e primeira coluna) em tabela com rolagem própria no computador.
+- [x] Bolinhas vibrantes com halo (verde/âmbar/vermelho) na tabela e nos cards.
+- [x] Status calculado pela última limpeza realizada: programação anterior a ela não conta como atrasada; atenção apenas no mês atual.
+- [x] Conferir rolagem, bolinhas e contagens no navegador.
