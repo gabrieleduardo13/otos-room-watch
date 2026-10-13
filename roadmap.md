@@ -26,5 +26,5 @@
 
 # Sincronização global dos Consultórios OTOS
 - [x] Conferir armazenamento existente e preservar os 25 consultórios, quatro itens de estoque e histórico, sem duplicar dados.
-- [ ] Ativar Realtime para consultórios, estoque e histórico e atualizar as consultas em todas as páginas.
-- [ ] Verificar gravação, leitura e sincronização entre duas telas mantendo o layout.
+- [x] Ativar Realtime para consultórios, estoque e histórico e atualizar as consultas em todas as páginas.
+- [x] Verificar gravação, leitura e sincronização entre duas telas mantendo o layout; restaurar status e saldo originais e apagar registro temporário.
