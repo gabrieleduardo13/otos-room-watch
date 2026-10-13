@@ -5,6 +5,8 @@ import { Check, ChevronLeft, ChevronRight, Download, Pencil, Plus, Search, Trash
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { consultoriosQuery } from "@/lib/consultorios";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/ar-condicionado")({
   head: () => ({ meta: [
@@ -19,7 +21,6 @@ export const Route = createFileRoute("/ar-condicionado")({
   component: AirConditioning,
 });
 
-const STORAGE_KEY = "otos_ac_schedule_v1";
 const BASE_YEAR = 2026;
 const SECTORS = ["Térreo", "1º Andar", "2º Andar", "Eusébio", "Parquelândia"] as const;
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -32,755 +33,16 @@ const STATUS_DOTS = {
   late: "bg-red-600 ring-4 ring-red-600/25",
 };
 type Schedule = { realizados: Record<string, string>; programados: number[] };
-type Room = Schedule & { id: string; setor: string; nome: string; anos?: Record<string, Schedule> };
+type Room = Schedule & { id: string; setor: string; nome: string; posicao?: number; anos?: Record<string, Schedule> };
 type Modal = { type: "room"; room?: Room } | { type: "delete"; room: Room } | { type: "month"; room: Room; month: number };
-const INITIAL_ROOMS: Room[] = [
-  {
-    "id": "ac-1",
-    "setor": "Térreo",
-    "nome": "sala 1",
-    "realizados": {
-      "4": "16/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-2",
-    "setor": "Térreo",
-    "nome": "sala 2",
-    "realizados": {
-      "0": "24/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-3",
-    "setor": "Térreo",
-    "nome": "sala 3",
-    "realizados": {
-      "4": "16/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-4",
-    "setor": "Térreo",
-    "nome": "sala 4",
-    "realizados": {
-      "2": "02/03"
-    },
-    "programados": [
-      7
-    ]
-  },
-  {
-    "id": "ac-5",
-    "setor": "Térreo",
-    "nome": "sala 5",
-    "realizados": {},
-    "programados": [
-      7
-    ]
-  },
-  {
-    "id": "ac-6",
-    "setor": "Térreo",
-    "nome": "sala 6",
-    "realizados": {
-      "0": "28/01"
-    },
-    "programados": [
-      5,
-      7
-    ]
-  },
-  {
-    "id": "ac-7",
-    "setor": "Térreo",
-    "nome": "sala 7",
-    "realizados": {
-      "0": "20/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-8",
-    "setor": "Térreo",
-    "nome": "sala 8",
-    "realizados": {
-      "5": "06/06"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-9",
-    "setor": "Térreo",
-    "nome": "sala 9",
-    "realizados": {
-      "5": "06/06"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-10",
-    "setor": "Térreo",
-    "nome": "sala 10 Danielle",
-    "realizados": {},
-    "programados": [
-      0,
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-11",
-    "setor": "Térreo",
-    "nome": "sala 11",
-    "realizados": {},
-    "programados": [
-      2,
-      7
-    ]
-  },
-  {
-    "id": "ac-12",
-    "setor": "Térreo",
-    "nome": "sala 12",
-    "realizados": {},
-    "programados": [
-      2,
-      7
-    ]
-  },
-  {
-    "id": "ac-13",
-    "setor": "Térreo",
-    "nome": "Prime Recep e consul",
-    "realizados": {
-      "5": "16/06 cons",
-      "6": "25/07 recep"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-14",
-    "setor": "Térreo",
-    "nome": "Sala audio A",
-    "realizados": {},
-    "programados": [
-      2,
-      7
-    ]
-  },
-  {
-    "id": "ac-15",
-    "setor": "Térreo",
-    "nome": "sala audio B",
-    "realizados": {
-      "3": "04/04"
-    },
-    "programados": [
-      8,
-      10
-    ]
-  },
-  {
-    "id": "ac-16",
-    "setor": "Térreo",
-    "nome": "lanchonete",
-    "realizados": {},
-    "programados": []
-  },
-  {
-    "id": "ac-17",
-    "setor": "Térreo",
-    "nome": "pqa",
-    "realizados": {
-      "0": "24/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-18",
-    "setor": "Térreo",
-    "nome": "recep 22000",
-    "realizados": {},
-    "programados": []
-  },
-  {
-    "id": "ac-19",
-    "setor": "Térreo",
-    "nome": "recep 60000",
-    "realizados": {
-      "0": "10/01",
-      "6": "25/07"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-20",
-    "setor": "Térreo",
-    "nome": "tst de próteses",
-    "realizados": {
-      "0": "10/01",
-      "6": "25/07"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-21",
-    "setor": "Térreo",
-    "nome": "PA Recep ORL",
-    "realizados": {},
-    "programados": [
-      2,
-      7
-    ]
-  },
-  {
-    "id": "ac-22",
-    "setor": "Térreo",
-    "nome": "proc auditivo",
-    "realizados": {
-      "0": "10/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-23",
-    "setor": "Térreo",
-    "nome": "refeitório",
-    "realizados": {
-      "4": "16/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-24",
-    "setor": "1º Andar",
-    "nome": "sala 14",
-    "realizados": {
-      "0": "10/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-25",
-    "setor": "1º Andar",
-    "nome": "sala 15",
-    "realizados": {
-      "3": "25/04",
-      "8": "01/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-26",
-    "setor": "1º Andar",
-    "nome": "sala 16",
-    "realizados": {
-      "4": "02/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-27",
-    "setor": "1º Andar",
-    "nome": "sala 17",
-    "realizados": {
-      "4": "02/05",
-      "7": "10/08"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-28",
-    "setor": "1º Andar",
-    "nome": "sala 18",
-    "realizados": {
-      "4": "02/05",
-      "8": "17/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-29",
-    "setor": "1º Andar",
-    "nome": "sala 19",
-    "realizados": {
-      "0": "26/01",
-      "5": "06/06",
-      "7": "22/08"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-30",
-    "setor": "1º Andar",
-    "nome": "sala 20",
-    "realizados": {
-      "0": "10/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-31",
-    "setor": "1º Andar",
-    "nome": "sala 21",
-    "realizados": {
-      "4": "05/05",
-      "8": "25/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-32",
-    "setor": "1º Andar",
-    "nome": "sala 22",
-    "realizados": {
-      "0": "22/01",
-      "1": "12/02",
-      "6": "25/07"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-33",
-    "setor": "1º Andar",
-    "nome": "sala 23",
-    "realizados": {
-      "4": "16/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-34",
-    "setor": "1º Andar",
-    "nome": "sala 24",
-    "realizados": {
-      "1": "23/02"
-    },
-    "programados": [
-      6,
-      10
-    ]
-  },
-  {
-    "id": "ac-35",
-    "setor": "1º Andar",
-    "nome": "sala 25",
-    "realizados": {
-      "0": "26/01"
-    },
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-36",
-    "setor": "1º Andar",
-    "nome": "CDO",
-    "realizados": {
-      "4": "22/05"
-    },
-    "programados": [
-      9
-    ]
-  },
-  {
-    "id": "ac-37",
-    "setor": "1º Andar",
-    "nome": "REPOUSO",
-    "realizados": {
-      "0": "10/01",
-      "8": "27/08"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-38",
-    "setor": "1º Andar",
-    "nome": "recep 1º and 60000",
-    "realizados": {
-      "3": "20/05",
-      "8": "19/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-39",
-    "setor": "1º Andar",
-    "nome": "briquedoteca",
-    "realizados": {},
-    "programados": [
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-40",
-    "setor": "1º Andar",
-    "nome": "recep exames frente LD's",
-    "realizados": {
-      "4": "22/05"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-41",
-    "setor": "1º Andar",
-    "nome": "pqa 1 AND",
-    "realizados": {
-      "4": "22/05"
-    },
-    "programados": [
-      9
-    ]
-  },
-  {
-    "id": "ac-42",
-    "setor": "1º Andar",
-    "nome": "espera exames",
-    "realizados": {},
-    "programados": [
-      0,
-      6,
-      11
-    ]
-  },
-  {
-    "id": "ac-43",
-    "setor": "1º Andar",
-    "nome": "Cyber",
-    "realizados": {
-      "6": "25/07"
-    },
-    "programados": [
-      9,
-      10
-    ]
-  },
-  {
-    "id": "ac-44",
-    "setor": "1º Andar",
-    "nome": "recepção 24000",
-    "realizados": {},
-    "programados": [
-      0,
-      5,
-      10
-    ]
-  },
-  {
-    "id": "ac-45",
-    "setor": "2º Andar",
-    "nome": "faturamento",
-    "realizados": {
-      "2": "07/03",
-      "8": "26/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-46",
-    "setor": "2º Andar",
-    "nome": "cpd",
-    "realizados": {
-      "2": "01/03",
-      "4": "22/05"
-    },
-    "programados": [
-      8
-    ]
-  },
-  {
-    "id": "ac-47",
-    "setor": "2º Andar",
-    "nome": "auditório 1",
-    "realizados": {
-      "2": "07/03"
-    },
-    "programados": [
-      6
-    ]
-  },
-  {
-    "id": "ac-48",
-    "setor": "2º Andar",
-    "nome": "auditório 2",
-    "realizados": {
-      "2": "07/03"
-    },
-    "programados": [
-      6
-    ]
-  },
-  {
-    "id": "ac-49",
-    "setor": "2º Andar",
-    "nome": "cal center",
-    "realizados": {
-      "2": "07/03",
-      "4": "27/05",
-      "8": "25/09"
-    },
-    "programados": []
-  },
-  {
-    "id": "ac-50",
-    "setor": "2º Andar",
-    "nome": "adm",
-    "realizados": {
-      "2": "07/03"
-    },
-    "programados": [
-      6
-    ]
-  },
-  {
-    "id": "ac-51",
-    "setor": "2º Andar",
-    "nome": "fin",
-    "realizados": {
-      "2": "01/02"
-    },
-    "programados": [
-      6
-    ]
-  },
-  {
-    "id": "ac-52",
-    "setor": "2º Andar",
-    "nome": "corredor",
-    "realizados": {},
-    "programados": []
-  },
-  {
-    "id": "ac-53",
-    "setor": "2º Andar",
-    "nome": "rh/cont/comp",
-    "realizados": {
-      "2": "07/03"
-    },
-    "programados": [
-      6
-    ]
-  },
-  {
-    "id": "ac-54",
-    "setor": "Eusébio",
-    "nome": "audiologia",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-55",
-    "setor": "Eusébio",
-    "nome": "LD",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-56",
-    "setor": "Eusébio",
-    "nome": "sala 02",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-57",
-    "setor": "Eusébio",
-    "nome": "sala 03",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-58",
-    "setor": "Eusébio",
-    "nome": "sala 04",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-59",
-    "setor": "Eusébio",
-    "nome": "recepção",
-    "realizados": {
-      "0": "15/01",
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-60",
-    "setor": "Eusébio",
-    "nome": "Sala 01",
-    "realizados": {
-      "3": "24/04",
-      "8": "17/09"
-    },
-    "programados": [
-      11
-    ]
-  },
-  {
-    "id": "ac-61",
-    "setor": "Parquelândia",
-    "nome": "recepção",
-    "realizados": {
-      "1": "19/02"
-    },
-    "programados": [
-      6,
-      10
-    ]
-  },
-  {
-    "id": "ac-62",
-    "setor": "Parquelândia",
-    "nome": "PA SL 01",
-    "realizados": {
-      "2": "02/03"
-    },
-    "programados": [
-      7
-    ]
-  },
-  {
-    "id": "ac-63",
-    "setor": "Parquelândia",
-    "nome": "LD SL 03",
-    "realizados": {},
-    "programados": [
-      3,
-      8
-    ]
-  },
-  {
-    "id": "ac-64",
-    "setor": "Parquelândia",
-    "nome": "sala 02",
-    "realizados": {
-      "5": "27/06"
-    },
-    "programados": [
-      3,
-      9
-    ]
-  },
-  {
-    "id": "ac-65",
-    "setor": "Parquelândia",
-    "nome": "sala 05",
-    "realizados": {
-      "5": "01/06"
-    },
-    "programados": [
-      3,
-      8
-    ]
-  },
-  {
-    "id": "ac-66",
-    "setor": "Parquelândia",
-    "nome": "vecto SL 04",
-    "realizados": {
-      "1": "12/02"
-    },
-    "programados": [
-      10
-    ]
-  },
-  {
-    "id": "ac-67",
-    "setor": "Parquelândia",
-    "nome": "audio sl 06",
-    "realizados": {},
-    "programados": [
-      1,
-      6,
-      11
-    ]
-  }
-];
+type AcRow = Database["public"]["Tables"]["ac_schedule"]["Row"];
+function fromRow(r: AcRow): Room {
+  const anos = (r.anos && typeof r.anos === "object" && !Array.isArray(r.anos) ? r.anos : {}) as Record<string, Schedule>;
+  return { id: r.id, setor: r.setor, nome: r.nome, posicao: r.posicao, realizados: (r.realizados ?? {}) as Record<string, string>, programados: r.programados ?? [], ...(Object.keys(anos).length ? { anos } : {}) };
+}
+function toRow(r: Room, posicao: number) {
+  return { id: r.id, setor: r.setor, nome: r.nome, posicao, realizados: r.realizados, programados: r.programados, anos: (r.anos ?? {}) as Json };
+}
 const field = "mt-2 w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-brand/40";
 const label = "block font-mono text-[10px] uppercase tracking-[0.15em] text-muted";
 
@@ -842,30 +104,38 @@ function AirConditioning() {
   useEffect(() => {
     const now = new Date();
     setToday(now); setYear(now.getFullYear()); setReportMonth(now.getMonth());
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null) {
-        const parsed: unknown = JSON.parse(saved);
-        if (!validRooms(parsed)) throw new Error("invalid");
-        setRooms(parsed);
-      } else {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ROOMS));
-        setRooms(INITIAL_ROOMS);
-      }
-      setReady(true);
-    } catch {
-      setError("Não foi possível ler os dados salvos neste navegador. Eles não foram substituídos. Verifique se o armazenamento do navegador está disponível e recarregue a página.");
-    }
+    let active = true;
+    const load = async () => {
+      const { data, error: err } = await supabase.from("ac_schedule").select("*").order("posicao").order("created_at");
+      if (!active) return;
+      if (err) { setError("Não foi possível carregar os dados do servidor. Verifique a conexão e recarregue a página."); return; }
+      setRooms((data ?? []).map(fromRow)); setReady(true); setError("");
+    };
+    void load();
+    const channel = supabase.channel("ac_schedule_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ac_schedule" }, () => { void load(); })
+      .subscribe();
+    return () => { active = false; void supabase.removeChannel(channel); };
   }, []);
-  function persist(next: Room[]) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setRooms(next); setError(""); return true;
-    } catch {
-      setError("Não foi possível salvar. A alteração não foi aplicada; verifique o espaço e as permissões deste navegador.");
+  async function persist(next: Room[]) {
+    const nextIds = new Set(next.map(r => r.id));
+    const removed = rooms.filter(r => !nextIds.has(r.id)).map(r => r.id);
+    const changed = next.filter(r => { const old = rooms.find(o => o.id === r.id); return !old || JSON.stringify(old) !== JSON.stringify(r); });
+    const maxPos = rooms.reduce((m, r) => Math.max(m, r.posicao ?? 0), 0);
+    const prev = rooms;
+    setRooms(next);
+    const ops: PromiseLike<{ error: unknown }>[] = [];
+    if (removed.length) ops.push(supabase.from("ac_schedule").delete().in("id", removed));
+    if (changed.length) ops.push(supabase.from("ac_schedule").upsert(changed.map((r, i) => toRow(r, r.posicao ?? maxPos + 1 + i))));
+    const results = await Promise.all(ops);
+    if (results.some(r => r.error)) {
+      setRooms(prev);
+      setError("Não foi possível salvar no servidor. A alteração não foi aplicada; verifique a conexão.");
       return false;
     }
+    setError(""); return true;
   }
+
   const visible = rooms.filter(r => (sector === "Todos" || r.setor === sector) && normalize(r.nome).includes(normalize(search.trim())));
   const counts = visible.reduce((acc, r) => { acc[roomStatus(r, year, today)]++; return acc; }, { ok: 0, attention: 0, late: 0 });
   const monthlyCompleted = visible.filter(room => schedule(room, year).realizados[reportMonth]?.trim());
@@ -902,7 +172,7 @@ function AirConditioning() {
         updated = putSchedule(updated, futureYear, { ...future, programados: [...new Set([...future.programados, futureMonth])].sort((a,b) => a-b) });
       }
     }
-    if (persist(rooms.map(r => r.id === room.id ? updated : r))) setModal(null);
+    void persist(rooms.map(r => r.id === room.id ? updated : r)).then(ok => ok && setModal(null));
   }
   function exportCSV() {
     const rows = [["Setor", "Ambiente", "Status Atual", "Limpezas Programadas", "Limpezas Realizadas"], ...visible.map(r => {
@@ -1032,13 +302,13 @@ function AirConditioning() {
             e.preventDefault(); if (!name.trim()) return;
             const next = modal.room ? rooms.map(r => r.id === modal.room?.id ? { ...r, nome: name.trim(), setor: roomSector } : r)
               : [...rooms, { id: crypto.randomUUID(), nome: name.trim(), setor: roomSector, realizados: {}, programados: [] }];
-            if (persist(next)) setModal(null);
+            void persist(next).then(ok => ok && setModal(null));
           }}>
             <label className={label}>Nome da sala / ambiente<input className={field} value={name} onChange={e => setName(e.target.value)} required maxLength={100} autoFocus /></label>
             <label className={label}>Setor<select className={field} value={roomSector} onChange={e => setRoomSector(e.target.value)}>{SECTORS.map(s => <option key={s}>{s}</option>)}</select></label>
             <div className="grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button type="button" variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button type="submit" disabled={!name.trim()}>Salvar sala</Button></div>
           </form>}
-          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { if (persist(rooms.filter(r => r.id !== modal.room.id))) setModal(null); }}>Excluir ambiente</Button></div></div>}
+          {modal?.type === "delete" && <div className="mt-5"><p className="text-sm">Excluir este ambiente e todas as suas marcações de limpeza?</p><div className="mt-5 grid gap-2 sm:flex sm:justify-end [&>button]:h-auto [&>button]:min-h-12 [&>button]:py-3"><Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button><Button variant="destructive" onClick={() => { void persist(rooms.filter(r => r.id !== modal.room.id)).then(ok => ok && setModal(null)); }}>Excluir ambiente</Button></div></div>}
           {modal?.type === "month" && <div className="mt-5">
             <label className={`${label} mb-4`}>Mês da limpeza<select className={field} value={modal.month} onChange={e => openMonth(modal.room, Number(e.target.value))}>{FULL_MONTHS.map((month, i) => <option key={month} value={i}>{month}</option>)}</select></label>
             <form onSubmit={e => { e.preventDefault(); updateMonth("done"); }}>
