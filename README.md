@@ -60,13 +60,13 @@ Também criar uma busca para localizar rapidamente um consultório ou médico.
 
 Criar um painel mostrando quantos consultórios estão com equipamentos OK, em atenção ou com problemas.
 
-This project was built with [Lovable](https://lovable.dev).
+This project was built with Gabriel
 
 **Live app**: https://otos-room-watch.lovable.app
 
 ## Build with Lovable
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/8fdcd2ec-5362-40e4-b956-37158990616c).
+
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
